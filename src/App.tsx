@@ -1,50 +1,50 @@
-import { useState } from 'react'
-import { useInfiniteQuery } from '@tanstack/react-query'
+import { useCallback, useMemo, useState } from 'react'
+
 import './App.css'
 import { Search } from './components/Search'
-import { PersonsGet } from './service/PersonService'
-import { type Person } from './interfaces/person'
-import { PersonList } from './components/PersonList'
 
-const initialData: Person[] = []
+import { PersonList } from './components/PersonList'
+import { type Filter } from './interfaces/filter'
+import { type Gender } from './interfaces/person'
+import { useUser } from './hooks/useUser'
 
 function App () {
   const {
-    data,
+    users,
     isLoading,
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage
-  } = useInfiniteQuery({
-    queryKey: ['users'],
-    queryFn: PersonsGet,
-    getNextPageParam: (lastPage, page) => lastPage.nextCursor + 1
-  })
+  } = useUser()
 
-  const users = data?.pages?.flatMap((page) => page.data) ?? []
-  const onSubmit = () => {
-    console.log('hola mundo')
-    console.log(data)
-  }
-  // const onSubmit = useCallback(({ name = '', city, gender }: Filter) => {
-  //   const filteredPerson = persons?.filter((person) =>
-  //     person.name.first.concat(person.name.last).toLocaleLowerCase().includes(name.toLocaleLowerCase()) ||
-  //     person.location.city === city ||
-  //     person.gender === gender)
+  const [filterName, setFilterName] = useState('')
+  const [filterCountry, setFilterCountry] = useState<string | undefined>()
+  const [filterGender, setFilterGender] = useState<Gender | undefined>(undefined)
 
-  //   console.log({
-  //     filteredPerson
-  //   })
+  const onSubmit = useCallback(({ name = '', country, gender }: Filter) => {
+    setFilterName(name)
+    setFilterGender(gender)
+    setFilterCountry(country)
+  }, [])
 
-  //   setFilterUsers(filteredPerson ?? persons ?? [])
-  // }, [])
+  const filteredUser = useMemo(() => {
+    const dataFiltered = users?.filter(user => {
+      const fullName = `${user.name.first} ${user.name.last}`.toLowerCase()
+      const isNameMatch = filterName !== '' ? fullName.includes(filterName.toLowerCase()) : true // Si filterName está vacío, se considera una coincidencia.
+      const isGenderMatch = (filterGender != null) ? user.gender === filterGender : true
+      const isCityMatch = (filterCountry != null) ? user.nat.toLowerCase() === filterCountry : true
+      return isNameMatch && isGenderMatch && isCityMatch
+    })
+
+    if (dataFiltered?.length > 0) { return dataFiltered ?? [] } else { return users }
+  }, [users, filterName, filterGender, filterCountry])
 
   return (
     <main>
       <section className='filter-container'>
         <Search onSubmit={onSubmit} />
       </section>
-      <PersonList users={users} isLoading = {isLoading} />
+      <PersonList users={filteredUser} isLoading = {isLoading} />
       <div>
         <button
         disabled={hasNextPage === false || isFetchingNextPage}
