@@ -12,7 +12,7 @@ export function Search ({ onSubmit }: Props) {
     const formData = new FormData(event.currentTarget)
     const data: Filter = {
       name: formData.get('name')?.toString(),
-      city: formData.get('city')?.toString(),
+      country: formData.get('city')?.toString(),
       activeRow: true,
       gender: formData.get('gender') as Gender
 
@@ -30,12 +30,12 @@ export function Search ({ onSubmit }: Props) {
       <div>
         <label htmlFor='city'>city</label>
         <select name='city' id='city' placeholder='city' >
-          <option>Seleccione una opcion....</option>
-          <option>Opcion 1</option>
-          <option>Opcion 2</option>
-          <option>Opcion 3</option>
-          <option>Opcion 4</option>
-          <option>Opcion 5</option>
+          <option value='' >Seleccione una opcion....</option>
+          <option value='es'>España</option>
+          <option value='ca'>Canada</option>
+          <option value='fr'>Francia</option>
+          <option value='us'>Estados Unidos</option>
+          <option value='au'>Australia</option>
         </select>
       </div>
       <div className='gender-container'>
